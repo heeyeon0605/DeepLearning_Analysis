@@ -26,7 +26,7 @@ def relu(z):
 
     return a, activation_cache
 
-def leacked_relu(z):
+def leacky_relu(z):
     # 0.01z는 leacked_relu에서 0대신에 특정 위치에서 0.01z값이 들어가게 해줌
     a = np.maximum(0.01 * z, z)
     activation_cache = z
@@ -92,3 +92,79 @@ def mean_square_error(a, y):
     cost = np.sum(np.square(a - y)) / (2 * m)
 
     return cost
+
+def cross_entropy_gradient(a, y):
+    m = y.shape[1]
+    da = -(y / a) / m
+
+    return da
+
+def mean_square_error_gradient(a, y):
+    m = y.shape[1]
+    da = (a - y) / m
+
+    return da
+
+def relu_gradient(da, activation_cache):
+    z = activation_cache
+
+    dz=np.ones(z.shape)
+    dz[z < 0]= 0
+    dz = da * dz
+
+    return dz
+
+def leaky_relu_gradient(da, activation_cache):
+    z = activation_cache
+
+    dz=np.ones(z.shape)
+    dz[z < 0]= 0.01
+    dz = da * dz
+
+    return dz
+
+def sigmoid_gradient(da, activation_cache):
+    z = activation_cache
+    a = 1 / (1 +np.exp(-z))
+
+    dz = da * a * (1 - a)
+
+    return dz
+
+def softmax(da, activation_cache):
+    z = activation_cache
+    z = z -np.max(z, axis=0, keepdims=True)
+    a = np.exp(z) / np.sum(np.exp(z), axis=0, keepdims=True)
+
+    (r, m) = da.shape
+    dz = np.zeros(da.shape)
+    for k in range(m):
+        middle_matrix = np.zeros((r, r))
+        for i in range(r):
+            for j in range(r):
+                if i == j:
+                    middle_matrix[i, j] = a[i, k] * (1 - a[i, k])
+                else:
+                    middle_matrix[i, j] = -(a[i, k] * a[j, k])
+        dz[:, k] = np.matmul(middle_matrix, da[:, k])
+
+    return dz
+
+def linear_gradient(dz, linear_cache):
+    w, b, a = linear_cache
+
+    dw = np.matmul(a, dz.T).T
+    db = np.mean(dz, axis=1, keepdims=True)
+    da = np.matmul(w.T, dz)
+
+    return dw, db, da
+
+def single_backward(da, linear_activation_cache, activation):
+
+def backward(a, y, forward_cache, cost_function, activation, last_activation, num_of_layers):
+
+def forward_and_backward(pams, x, y, activation, last_activation, cost_function, num_of_layers):
+
+def update_parameters(params, grads, learning_rate, num_of_layers):
+
+def predict(params, x_test, y_test, activation, last_activation, num_of_layers):

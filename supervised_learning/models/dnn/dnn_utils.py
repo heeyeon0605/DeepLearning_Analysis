@@ -41,7 +41,7 @@ def sigmoid(z):
 
 def softmax(z):
     # z = z - np.max(z, axis=0, keepdim=True)
-    a = np.exp(z) / np.sum(np.exp(z), axis=0, keepdim=True)
+    a = np.exp(z) / np.sum(np.exp(z), axis=0, keepdims=True)
     activation_cache = z
 
     return a, activation_cache
@@ -51,14 +51,15 @@ def single_forward(w, b, a, activation):
 
     if activation == "relu" :
         a, activation_cache = relu(z)
-    elif activation == "leacked_relu" :
-        a, activation_cache = leacked_relu(z)
+    elif activation == "leacky_relu" :
+        a, activation_cache = leacky_relu(z)
     elif activation == "sigmoid" :
         a, activation_cache = sigmoid(z)
     elif activation == "softmax" :
         a, activation_cache = softmax(z)
 
     linear_activation_cache = linear_cache, activation_cache
+    # activation_cache가 if문에 아예 안걸리는 경우는 쓰레기값 들어갈텐데 어떻게 처리?
 
     return a, linear_activation_cache
 
@@ -76,7 +77,7 @@ def forward(params, x, activation, last_activation, num_of_layers):
     return a, forward_cache
 
 def cross_entropy(a, y):
-    #베르누이 확률분포
+    #베르누이 확률분포 (cost 함수 미분한 것)
 
     m = y.shape[1]
 
@@ -84,8 +85,17 @@ def cross_entropy(a, y):
 
     return cost
 
+def compute_cost(a, y, cost_function, params, num_of_layers):
+    cost = 0
+    if cost_function == 'cross_entropy':
+        cost = cross_entropy(a, y)
+    elif cost_function == 'mean_square_error':
+        cost = mean_square_error(a, y)
+
+    return cost
+
 def mean_square_error(a, y):
-    #가우시안 확률분포
+    #가우시안 확률분포 (cost 함수 미분한 것)
 
     m = y.shape[1]
 
@@ -110,7 +120,7 @@ def relu_gradient(da, activation_cache):
 
     dz=np.ones(z.shape)
     dz[z < 0]= 0
-    dz = da * dz
+    dz = da * dz # 왜 곱할가욤..? 아 편미분?
 
     return dz
 
@@ -127,11 +137,11 @@ def sigmoid_gradient(da, activation_cache):
     z = activation_cache
     a = 1 / (1 +np.exp(-z))
 
-    dz = da * a * (1 - a)
+    dz = da * a * (1 - a) # 미분한
 
     return dz
 
-def softmax(da, activation_cache):
+def softmax_gradient(da, activation_cache):
     z = activation_cache
     z = z -np.max(z, axis=0, keepdims=True)
     a = np.exp(z) / np.sum(np.exp(z), axis=0, keepdims=True)
@@ -161,10 +171,55 @@ def linear_gradient(dz, linear_cache):
 
 def single_backward(da, linear_activation_cache, activation):
 
-def backward(a, y, forward_cache, cost_function, activation, last_activation, num_of_layers):
+    linear_cache, activation_cache = linear_activation_cache
 
-def forward_and_backward(pams, x, y, activation, last_activation, cost_function, num_of_layers):
+    if activation == "relu":
+        dz = relu_gradient(da, activation_cache)
+    elif activation == "leaky_relu":
+        dz = leaky_relu_gradient(da, activation_cache)
+    elif activation == "sigmoid":
+        dz = sigmoid_gradient(da, activation_cache)
+    elif activation == "softmax":
+        dz = softmax_gradient(da, activation_cache)
+
+    dw, db, prev_da = linear_gradient(dz, linear_cache)
+
+    return dw, db, prev_da
+
+def backward(a, y, forward_cache, cost_function, activation, last_activation, num_of_layers):
+    grads = {}
+
+    if cost_function == "cross_entropy" :
+        da = mean_square_error_gradient(a, y)
+    elif cost_function == "mean_square_error" :
+        da = mean_square_error_gradient(a, y)
+    for i in reversed(range(1, num_of_layers)):
+        print(grads.keys())
+        if i == num_of_layers - 1: # 마지막 층부터
+            grads["dw" + str(i)], grads["db" + str(i)], grads["da" + str(i - 1)] = single_backward(da, forward_cache[i - 1], last_activation)
+        else: # 마지막 층을 제외한 나머지 거꾸로
+            grads["dw" + str(i)], grads["db" + str(i)], grads["da" + str(i - 1)] = single_backward(grads["da" + str(i)], forward_cache[i - 1], activation)
+    return grads
+
+def forward_and_backward(params, x, y, activation, last_activation, cost_function, num_of_layers):
+    a, forward_cache = forward(params, x, activation, last_activation, num_of_layers)
+    cost = compute_cost(a, y, cost_function, params, num_of_layers)
+    grads = backward(a, y, forward_cache, cost_function, activation, last_activation, num_of_layers)
+    return cost, grads
 
 def update_parameters(params, grads, learning_rate, num_of_layers):
+    for i in range(1, num_of_layers):
+        params["w" + str(i)] = params["w" + str(i)] - learning_rate * grads["dw" + str(i)]
+        params["b" + str(i)] = params["b" + str(i)] - learning_rate * grads["db" + str(i)]
 
 def predict(params, x_test, y_test, activation, last_activation, num_of_layers):
+    a, _ = forward(params, x_test, activation, last_activation, num_of_layers)
+    zeros = np.zeros(a.shape)
+    zeros[a >= 0.75] = 1
+
+    accuracy = np.mean(np.all(zeros == y_test, axis=0, keeodims=True)) * 100
+
+    return accuracy
+
+
+

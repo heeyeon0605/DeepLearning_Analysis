@@ -15,7 +15,8 @@ def dnn_model(x_train, y_train, x_test, y_test, activation, last_activation, lea
             cost, grads = dnn_utils.forward_and_backward(params, mini_batch_x, mini_batch_y, activation, last_activation, cost_function, num_of_layers)
             params = dnn_utils.update_parameters(params, grads, learning_rate, num_of_layers)
             if j % 100 == 0:
-                print(cost)
+                print(cost) # cost가 한 번 밖에 출력이 안되는 걸 봐서 for문 안에서 문제가 있는듯
+                # forward_and_backward 함수 안에서 확인해 봤을 때 코스트 한 번은 잘 나옴
                 costs.append(cost)
 
     accuracy_train = dnn_utils.predict(params, x_train, y_train, activation, last_activation, num_of_layers)

@@ -26,7 +26,7 @@ def relu(z):
 
     return a, activation_cache
 
-def leacky_relu(z):
+def leaky_relu(z):
     # 0.01z는 leacked_relu에서 0대신에 특정 위치에서 0.01z값이 들어가게 해줌
     a = np.maximum(0.01 * z, z)
     activation_cache = z
@@ -51,15 +51,14 @@ def single_forward(w, b, a, activation):
 
     if activation == "relu" :
         a, activation_cache = relu(z)
-    elif activation == "leacky_relu" :
-        a, activation_cache = leacky_relu(z)
+    elif activation == "leaky_relu" :
+        a, activation_cache = leaky_relu(z)
     elif activation == "sigmoid" :
         a, activation_cache = sigmoid(z)
     elif activation == "softmax" :
         a, activation_cache = softmax(z)
 
     linear_activation_cache = linear_cache, activation_cache
-    # activation_cache가 if문에 아예 안걸리는 경우는 쓰레기값 들어갈텐데 어떻게 처리?
 
     return a, linear_activation_cache
 
@@ -194,7 +193,6 @@ def backward(a, y, forward_cache, cost_function, activation, last_activation, nu
     elif cost_function == "mean_square_error" :
         da = mean_square_error_gradient(a, y)
     for i in reversed(range(1, num_of_layers)):
-        print(grads.keys())
         if i == num_of_layers - 1: # 마지막 층부터
             grads["dw" + str(i)], grads["db" + str(i)], grads["da" + str(i - 1)] = single_backward(da, forward_cache[i - 1], last_activation)
         else: # 마지막 층을 제외한 나머지 거꾸로
@@ -212,12 +210,14 @@ def update_parameters(params, grads, learning_rate, num_of_layers):
         params["w" + str(i)] = params["w" + str(i)] - learning_rate * grads["dw" + str(i)]
         params["b" + str(i)] = params["b" + str(i)] - learning_rate * grads["db" + str(i)]
 
+    return params
+
 def predict(params, x_test, y_test, activation, last_activation, num_of_layers):
     a, _ = forward(params, x_test, activation, last_activation, num_of_layers)
     zeros = np.zeros(a.shape)
     zeros[a >= 0.75] = 1
 
-    accuracy = np.mean(np.all(zeros == y_test, axis=0, keeodims=True)) * 100
+    accuracy = np.mean(np.all(zeros == y_test, axis=0, keepdims=True)) * 100
 
     return accuracy
 

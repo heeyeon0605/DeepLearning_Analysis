@@ -3,7 +3,7 @@ import numpy as np
 import os
 import definitions
 
-def load_sign_dataset() :
+def load_sign_dataset():
     train_dataset = h5py.File(
         os.path.join(definitions.ROOT_DIR, "supervised_learning/models/data/data_set/signs_train.h5"), "r")
     # print(train_dataset.keys())
@@ -24,23 +24,23 @@ def load_sign_dataset() :
     m1 = y_test.shape[0]
 
     y_test = y_test.reshape(m1, -1)
-    output_dim = np.array(train_dataset["list_classes"]).shape[0]
+    output_dim = np.array(train_dataset["list_classes"]).shape[0] # 복습
 
     return x_train, x_test, y_train, y_test, output_dim
 
-def flatten(x, y) :
+def flatten(x, y):
     m = x.shape[0]
-    x = x.reshape(m, -1).T # dim x m 으로 바꿔줌, 64643 을 바꿔주려고 하는 것
+    x = x.reshape(m, -1).T # dim x m 으로 바꿔줌, 64,64,3 을 바꿔주려고 하는 것
     y = y.reshape(m, -1).T # dim x m 으로 바꿔줌
     input_dim = x.shape[0]
     return x, y, input_dim
 
-def centralized(x) :
+def centralized(x):
     x = x / 255 # 모두 0과 1사이로 바뀌도록 해줌
 
     return x
 
-def one_hot_encoding(y, output_dim) :
+def one_hot_encoding(y, output_dim): # 복습
     m = y.shape[1]
     one_hot = np.zeros((m, output_dim))
 

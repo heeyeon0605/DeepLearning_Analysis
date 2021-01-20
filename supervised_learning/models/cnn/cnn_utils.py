@@ -9,7 +9,7 @@ def initialize_filter(filter_size, num_of_input_channel, num_of_output_channel):
 
 def zero_pad(x, pad_size):
     # x : (m * height * weight * channel)
-    # x를 padding 해줘서 x_pad를 만드는
+    # x를 padding 해줘서 x_pad를 만드는 것
     x_pad = np.pad(x, ((0, 0), (pad_size, pad_size), (pad_size, pad_size), (0, 0)), 'constant', constant_values=0)
 
     return x_pad
@@ -115,6 +115,9 @@ def max_pooling_slice_backward(da, a):
     return da
 
 
+def average_pooling_slice_backward():
+
+
 def pool_backward(d_pool_a, cache, mode="max"):
     (a, hparameters) = cache
 
@@ -135,8 +138,7 @@ def pool_backward(d_pool_a, cache, mode="max"):
                     width_start = w * pool_stride
                     width_end = width_start + pool_size
 
-                    if mode == "max":
-                        a_slice = a[i, height_start:height_end, width_start:width_end, c]
+                    if mode == "max": #  backward 부분 if elif 부분만 한 번만 다시 설명 부탁하기                        a_slice = a[i, height_start:height_end, width_start:width_end, c]
                         d_a_slice = max_pooling_slice_backward(d_pool_a[i, h, w, c], a_slice)
                         da[i, height_start:height_end, width_start:width_end, c] += d_a_slice
                     elif mode == "average":

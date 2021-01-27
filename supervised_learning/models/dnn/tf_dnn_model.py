@@ -1,6 +1,6 @@
-import numpy as np
+import tensorflow as tf
 import matplotlib.pyplot as plt
-import supervised_learning.models.dnn.dnn_utils as dnn_utils
+import supervised_learning.models.dnn.tf_dnn_utils as dnn_utils
 import supervised_learning.models.data.data_utils as data_utils
 
 

@@ -10,13 +10,15 @@ def initialize_filter_parameter(filter_size, num_of_input_channel, num_of_output
         filter_parameters["w" + str(i)] = tf.Variable(name="w" + str(i),
                                                       shape=(filter_size, filter_size, channels_of_layers[i - 1],
                                                              channels_of_layers[i]))
-        # b도 만들어야
+        filter_parameters["b" + str(i)] = tf.Variable(name="b" + str(i),
+                                                      shape=(filter_size, filter_size, channels_of_layers[i - 1],
+                                                             channels_of_layers[i])) # shape 이거 맞나?
     return filter_parameters
 
 
 def single_convolution_forward(prev_a_slice, single_filter_w, single_filter_b):
     z_element = prev_a_slice * single_filter_w
-    z_element = tf.math.reduce_sum(z_element) + single_filter_b  # 다 더한다는 의
+    z_element = tf.math.reduce_sum(z_element) + single_filter_b  # 다 더한다는 의미
 
     return z_element
 
@@ -66,13 +68,42 @@ def relu(z):
 
 
 def softmax(z):
-    a = tf.exp(z) / tf.reduce.sum(np.exp(z), axis=0, keepdims=True)
+    a = tf.exp(z) / tf.reduce_sum(np.exp(z), axis=0, keepdims=True)
 
     return a
 
 
 def pool_forward(a, hparameters, mode="max"):
-    # 써야됨.
+    (m, a_height, a_width, a_channel) = a.shape
+
+    pool_size = hparameters["pool_size"]
+    pool_stride = hparameters["pool_stride"]
+
+    pool_a_height = int((a_height - pool_size) / pool_stride) + 1
+    pool_a_width = int((a_width - pool_size) / pool_stride) + 1
+    pool_a_channel = a_channel
+
+    pool_a = tf.zeros((m, pool_a_height, pool_a_width, pool_a_channel))
+
+    for i in range(m):
+        for h in range(pool_a_height):
+            for w in range(pool_a_width):
+                for c in range(pool_a_channel):
+                    height_start = h * pool_stride
+                    height_end = height_start + pool_size
+                    width_start = w * pool_stride
+                    width_end = width_start + pool_size
+
+                    a_slice = a[i, height_start:height_end, width_start:width_end, :]
+
+                    if mode == "max":
+                        pool_a[i, h, w, c] = tf.reduce_max(a_slice)
+                    elif mode == "average":
+                        pool_a[i, h, w, c] = tf.reduce_mean(a_slice)
+
+    cache = a, hparameters
+
+    return pool_a, cache
 
 
 def flatten(a):
@@ -94,7 +125,7 @@ def cross_entropy(a, y):
 
     m = y.shape[1]
 
-    cost = tf.reduce.sum(-(y * np.log(a))) / m
+    cost = tf.reduce_sum(-(y * np.log(a))) / m
 
     return cost
 
@@ -112,6 +143,6 @@ def mean_square_error(a, y):
 
     m = y.shape[1]
 
-    cost = tf.reduce.sum(np.square(a - y)) / (2 * m)
+    cost = tf.reduce_sum(np.square(a - y)) / (2 * m)
 
     return cost

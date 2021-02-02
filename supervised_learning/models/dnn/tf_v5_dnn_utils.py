@@ -8,6 +8,8 @@ def init_params(dim_of_layers):
     for i in range(1, num_of_layers):
         params["w" + str(i)] = tf.Variable(tf.random.normal(shape=(dim_of_layers[i-1], dim_of_layers[i]), mean=0, stddev=1.), name="w" + str(i))
         params["b" + str(i)] = tf.Variable(tf.zeros(shape=(dim_of_layers[i], 1)), "w" + str(i))
+        # 여기 문제가 있는 듯
+    print(params)
 
     return params
 
@@ -74,7 +76,7 @@ def cross_entropy(a, y):
 
     cost = tf.math.reduce_sum(-(y * tf.math.log(a))) / m
 
-    return cost
+    return cost # 여기나(여기도 아닐 것 같음)
 
 
 def mean_square_error(a, y):
@@ -92,7 +94,7 @@ def compute_cost(a, y, cost_function, params, num_of_layers):
     elif cost_function == 'mean_square_error':
         cost = mean_square_error(a, y)
 
-    return cost
+    return cost # 여기나 (여기는 아닐 것 같음)
 
 
 def backward(cost, params, num_of_layers):
@@ -102,7 +104,7 @@ def backward(cost, params, num_of_layers):
         for i in reversed(range(1, num_of_layers)):
             grads["dw" + str(i)] = tape.gradient(cost, sources=params["w" + str(i)])
             grads["db" + str(i)] = tape.gradient(cost, sources=params["w" + str(i)])
-    print(grads) # 이거 미분계수가 왜 None 인지 알기 !!!!!
+    # print(grads) # 이거 미분계수가 왜 None 인지 알기 !!!!!
     return grads
 
 
@@ -118,6 +120,7 @@ def update_parameters(params, grads, learning_rate, num_of_layers):
         params["w" + str(i)] = params["w" + str(i)].assign_sub(learning_rate * grads["dw" + str(i)])
         params["b" + str(i)] = params["b" + str(i)].assign_sub(learning_rate * grads["dw" + str(i)])
 
+    # forward and backward, backward에서 논 타입이 나왔으니까 에러가 뜨는 듯.
     return params
 
 

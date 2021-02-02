@@ -139,7 +139,7 @@ def pool_backward(d_pool_a, cache, mode="max"):
                     width_end = width_start + pool_size
 
                     if mode == "max": #  backward 부분 if elif 부분만 한 번만 다시 설명 부탁하기                        a_slice = a[i, height_start:height_end, width_start:width_end, c]
-                        d_a_slice = max_pooling_slice_backward(d_pool_a[i, h, w, c], a_slice)
+                        # d_a_slice = max_pooling_slice_backward(d_pool_a[i, h, w, c], a_slice)
                         da[i, height_start:height_end, width_start:width_end, c] += d_a_slice
                     elif mode == "average":
                         d_a_slice = average_pooling_slice_backward(d_pool_a[i, h, w, c], pool_size)

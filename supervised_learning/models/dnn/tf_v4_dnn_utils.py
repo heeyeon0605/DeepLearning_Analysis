@@ -73,6 +73,7 @@ class Dropout1(tf.keras.layers):
             return tf.nn.dropout(input, rate=self.rate)
         return input
 
+'''
 # 레이어 생성 4 (조합)
 class Combination(tf.keras.layers):
     def __init__(self):
@@ -83,3 +84,15 @@ class Combination(tf.keras.layers):
     def call(self, input, training=None):
         a = self.dense(input)
         return self.dropout(a, training=training)
+'''
+
+# 3. 모델 생성
+input = tf.keras.Input(shape=(28, 28))
+input_flatten = tf.keras.layers.Flatten(input_shape=(28, 28))(input)
+hidden1 = tf.keras.layers.Dense2(64, activation='relu')(input_flatten)
+hidden2 = tf.keras.layers.Dense2(64, activation='relu')(hidden1)
+hidden3 = tf.keras.layers.Dense2(64, activation='relu')(hidden1 + hidden2)
+output = tf.keras.layers.Dense2(10, activation='softmax')(hidden3)
+model = tf.keras.Model(input, output)
+
+# 과제는 v4에 3. 모델 생성 만들어보기, v1-3까지 실제 데이터로도 돌아가는지 인해보고 정확도 낮으면 높여보기

@@ -36,6 +36,12 @@ class Dense1(tf.keras.layers):
         return self.activation(tf.linalg.matmul(inputs, self.w) + self.b)
 
 
+dense1 = Dense1(input_dim=2, units=1, activation='sigmoid')
+assert dense1.weights == [dense1.w, dense1.b]  # weights 는 w 와 b 를 활용하려고 배열로 넣어놓은 것
+assert dense1.non_trainable_weights == []
+assert dense1.trainable_weights == [dense1.w, dense1.b]
+#  dense2 도 똑같이 사용해볼 수 있음.
+
 # 레이어 생성 2 (build 메소드)
 class Dense2(tf.keras.layers):
     def __init__(self, input_dim, units, activation):
@@ -68,10 +74,11 @@ class Dropout1(tf.keras.layers):
         super(Dropout1, self).__init__()
         self.rate = rate
 
-    def call(self, input, training=None):
+    def call(self, inputs, training=None): # training 을 할지 말지 결정할 수 있음.
         if training:
             return tf.nn.dropout(input, rate=self.rate)
-        return input
+        return inputs
+
 
 '''
 # 레이어 생성 4 (조합)

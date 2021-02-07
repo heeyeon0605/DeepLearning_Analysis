@@ -40,6 +40,8 @@ dense1 = Dense1(input_dim=2, units=1, activation='sigmoid')
 assert dense1.weights == [dense1.w, dense1.b]  # weights 는 w 와 b 를 활용하려고 배열로 넣어놓은 것
 assert dense1.non_trainable_weights == []
 assert dense1.trainable_weights == [dense1.w, dense1.b]
+
+
 #  dense2 도 똑같이 사용해볼 수 있음.
 
 # 레이어 생성 2 (build 메소드)
@@ -74,32 +76,78 @@ class Dropout1(tf.keras.layers):
         super(Dropout1, self).__init__()
         self.rate = rate
 
-    def call(self, inputs, training=None): # training 을 할지 말지 결정할 수 있음.
+    def call(self, inputs, training=None):  # training 을 할지 말지 결정할 수 있음.
         if training:
             return tf.nn.dropout(input, rate=self.rate)
         return inputs
 
 
-'''
 # 레이어 생성 4 (조합)
-class Combination(tf.keras.layers):
-    def __init__(self):
+class Combination(tf.keras.layers.Layer):
+    def __init__(self, input_dim, units, activation):
         super(Combination, self).__init__()
-        self.dense = Dense1(input_dim, units, activation)
-        self.dropout = Dropout1(0.5)
+        self.dense1 = Dense1(input_dim, units, activation)
+        self.dropout = Dropout1(0.1)
 
-    def call(self, input, training=None):
-        a = self.dense(input)
+    def call(self, inputs, training=None):
+        a = self.dense1(inputs)  # 왜 안불러지는지 알아기
         return self.dropout(a, training=training)
-'''
+
 
 # 3. 모델 생성
-input = tf.keras.Input(shape=(28, 28))
-input_flatten = tf.keras.layers.Flatten(input_shape=(28, 28))(input)
-hidden1 = tf.keras.layers.Dense2(64, activation='relu')(input_flatten)
-hidden2 = tf.keras.layers.Dense2(64, activation='relu')(hidden1)
-hidden3 = tf.keras.layers.Dense2(64, activation='relu')(hidden1 + hidden2)
-output = tf.keras.layers.Dense2(10, activation='softmax')(hidden3)
-model = tf.keras.Model(input, output)
+class Model1(tf.keras.models.Model):
+    def __init__(self):
+        super(Model1, self).__init__()
+        self.hidden_layer1 = Combination(input_dim=784, units=64, activation='relu')
+        self.hidden_layer2 = Combination(input_dim=64, units=64, activation='relu')
+        self.hidden_layer3 = Combination(input_dim=64, units=32, activation='relu')
+        self.output_layer = Combination(input_dim=32, units=10, activation='softmax')
 
-# 과제는 v4에 3. 모델 생성 만들어보기, v1-3까지 실제 데이터로도 돌아가는지 인해보고 정확도 낮으면 높여보기
+    def call(self, inputs, traning=None):
+        hidden1 = self.hidden_layer1(inputs, training=training)
+        hidden2 = self.hidden_layer1(inputs, training=training)
+        hidden3 = self.hidden_layer1(inputs, training=training)
+        return self.output_layer(hidden2, traning=training)
+
+
+# 4. 모델 로스/옵티마이저/메트릭
+loss = tf.keras.losses.SparseCategoricalCrossentropy()
+optimizer = tf.keras.optimizers.Adam()
+accuracy = tf.keras.metrics.SparseCategoricalAccuracy()
+
+
+# 5. 모델 트레이닝/평가
+# @ tf.function
+def train_step(x, y):
+    with tf.GradientTape() as tape:
+        logits = Model1(x, training=True)
+        loss_value = loss(y, logits)
+    gradients = tape.gradient(loss_value, Model1.trainable_weights)
+    optimizer.apply_gradients(zip(gradients, Model1.trainable_weights))
+    accuracy.update_state(y, logits)
+
+    if step % 100 == 0:
+        print("%d 단계: " % (step))
+        print('loss_value: %f' % (float(loss_value)))
+        print('train accuracy: %f' % (float(accuracy.result())))
+
+    return loss_value
+
+
+def test_step(x, y):
+    accuracy.reset_states()
+    logits = Model1(x, training=False)
+    accuracy.update_state(y, logits)
+
+
+for epoch in range(10):
+    print('%d번째 epoch' % (epoch + 1))
+    for index, (x, y) in enumerate(train_data):
+        loss_value = train_step(x, y)
+        print('%d 단계 / loss_value: %f / accuracy: %f' % (index, float(loss_value), float(accuracy.result())))
+
+    for step, (x, y) in enumerate(test_data):
+        test_step(x, y)
+        print('test accuracy: %f' % (float(accuracy.result())))
+
+# v1-4까지 실제 데이터로도 돌아가는지 인해보고 정확도 낮으면 높여보기

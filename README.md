@@ -1,2 +1,2 @@
 # deep learning
-## Hee Yeon Shin
+This file is about supervised learning. It includes logistic regression, cnn, dnn, and rnn using numpy and tensorflow.
